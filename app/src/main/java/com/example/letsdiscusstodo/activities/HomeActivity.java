@@ -1,4 +1,4 @@
-package com.example.letsdiscusstodo;
+package com.example.letsdiscusstodo.activities;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
@@ -10,10 +10,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.example.letsdiscusstodo.R;
+import com.example.letsdiscusstodo.activities.EntryChooseActivity;
 import com.example.letsdiscusstodo.fragment.AllUsersPostFragment;
 import com.example.letsdiscusstodo.fragment.MyPostsFragment;
 import com.example.letsdiscusstodo.fragment.MyTopPostsFragment;
 import com.example.letsdiscusstodo.model.Post;
+import com.example.letsdiscusstodo.model.User;
 import com.example.letsdiscusstodo.model.UserInformation;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
@@ -232,7 +235,7 @@ public class HomeActivity extends AppCompatActivity {
                                         mProgressDialog.dismiss();
 
                                         Toast.makeText(getApplicationContext(),
-                                                "Error: could not fetch user.",
+                                                "Complete the user profile details then you can post notes.",
                                                 Toast.LENGTH_SHORT).show();
 
                                     }
@@ -280,6 +283,14 @@ public class HomeActivity extends AppCompatActivity {
                 finish();
                 return true;
             }
+
+            case R.id.user_info: {
+
+                startActivity(new Intent(this, UserInfoActivity.class));
+                finish();
+                return true;
+            }
+
             default:
                 return super.onOptionsItemSelected(item);
 

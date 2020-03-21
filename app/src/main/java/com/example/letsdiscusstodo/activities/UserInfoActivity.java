@@ -1,16 +1,18 @@
-package com.example.letsdiscusstodo;
+package com.example.letsdiscusstodo.activities;
 
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.example.letsdiscusstodo.R;
 import com.example.letsdiscusstodo.dialog.MyProgressDialog;
 import com.example.letsdiscusstodo.model.UserInformation;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -19,21 +21,20 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import de.hdodenhof.circleimageview.CircleImageView;
-import id.zelory.compressor.Compressor;
 
 public class UserInfoActivity extends AppCompatActivity {
 
@@ -65,7 +66,6 @@ public class UserInfoActivity extends AppCompatActivity {
     private MyProgressDialog mMyProgressDialog;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,9 +86,40 @@ public class UserInfoActivity extends AppCompatActivity {
         database = FirebaseFirestore.getInstance();
 
         mStorageRef = FirebaseStorage.getInstance().getReference("images/profileImages/");
-       // mDatabaseReference = FirebaseDatabase.getInstance().getReference("uploads");
+        // mDatabaseReference = FirebaseDatabase.getInstance().getReference("uploads");
 
         mMyProgressDialog = new MyProgressDialog(this);
+
+        mDatabase.child("users/" + userId).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+
+                if (dataSnapshot.exists()) {
+
+                    UserInformation userInformation = dataSnapshot.getValue(UserInformation.class);
+                    Log.d("Abhijeet", "onDataChange: " + userInformation.getProfileUri());
+
+                    mUserName.getEditText().setText(userInformation.getUserName());
+                    mUserAbout.getEditText().setText(userInformation.getAbout());
+
+                    if (userInformation.getProfileUri().equals("default")) {
+                        mUserPic.setImageResource(R.drawable.user);
+                    } else {
+                        Glide.with(getApplicationContext()).load(userInformation.getProfileUri()).into(mUserPic);
+                    }
+
+                }
+
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
 
         mMyProgressDialog.setTitle("Uploading.....");
         mMyProgressDialog.setMessage("");
@@ -124,7 +155,7 @@ public class UserInfoActivity extends AppCompatActivity {
 
     }
 
-    private String getFileExtension(Uri uri){
+    private String getFileExtension(Uri uri) {
 
         ContentResolver cR = getContentResolver();
         MimeTypeMap mime = MimeTypeMap.getSingleton();
@@ -183,8 +214,6 @@ public class UserInfoActivity extends AppCompatActivity {
 
 
         if (uri != null) {
-
-
 
 
             final StorageReference picRef = mStorageRef.child(System.currentTimeMillis() + "." + getFileExtension(uri));
@@ -246,8 +275,9 @@ public class UserInfoActivity extends AppCompatActivity {
 
                 mMyProgressDialog.dismiss();
 
-                startActivity(new Intent(getApplicationContext(), HomeActivity.class));
-                finish();
+                Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
 
 
             }

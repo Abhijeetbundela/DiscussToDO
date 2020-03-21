@@ -1,4 +1,4 @@
-package com.example.letsdiscusstodo;
+package com.example.letsdiscusstodo.activities;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -8,6 +8,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.letsdiscusstodo.R;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.textfield.TextInputLayout;
@@ -95,8 +96,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
 
                 Intent intent = new Intent(getApplicationContext(), SignUpActivity.class);
-//                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-//                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK |Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
 
                 break;
@@ -106,8 +106,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
 
                 Intent intent = new Intent(getApplicationContext(), ForgotPasswordActivity.class);
-//                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-//                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK |Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 break;
 

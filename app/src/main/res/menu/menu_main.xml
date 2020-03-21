@@ -8,6 +8,12 @@
         app:showAsAction="never"/>
 
 
+    <item
+        android:id="@+id/user_info"
+        android:title="User Profile Details"
+        app:showAsAction="never"/>
+
+
 
 
 </menu>

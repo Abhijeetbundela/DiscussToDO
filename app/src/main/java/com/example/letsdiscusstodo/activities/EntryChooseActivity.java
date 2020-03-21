@@ -1,4 +1,4 @@
-package com.example.letsdiscusstodo;
+package com.example.letsdiscusstodo.activities;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
 
+import com.example.letsdiscusstodo.R;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -140,12 +141,8 @@ public class EntryChooseActivity extends AppCompatActivity implements View.OnCli
             case R.id.email_include: {
 
                 Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK   );
                 startActivity(intent);
-                finish();
-
-
                 break;
             }
 

@@ -4,18 +4,17 @@ package com.example.letsdiscusstodo.fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
-import android.net.Network;
 import android.net.NetworkInfo;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.example.letsdiscusstodo.PostDetailActivity;
+import com.example.letsdiscusstodo.activities.PostDetailActivity;
 import com.example.letsdiscusstodo.R;
 import com.example.letsdiscusstodo.model.Post;
 import com.example.letsdiscusstodo.model.UserInformation;
@@ -30,7 +29,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.Transaction;
-import com.squareup.picasso.Picasso;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.Objects;
 
@@ -52,10 +51,6 @@ public class AllUsersPostFragment extends Fragment {
     private FirebaseRecyclerAdapter<Post, AllUserPostViewHolder> mAdapter;
     private RecyclerView mRecycler;
     private LinearLayoutManager mManager;
-  //  private UserInformation userInformation;
-    private CircleImageView circleImageView;
-
-
 
     public AllUsersPostFragment() {
     }
@@ -68,32 +63,27 @@ public class AllUsersPostFragment extends Fragment {
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
-        circleImageView = rootView.findViewById(R.id.profile_pic_user);
-
-       // Picasso.get().load(userInformation.getProfileUri()).into(circleImageView);
-       // circleImageView.setImageURI(Uri.parse(userInformation.getProfileUri()));
-
-       // Glide.with(getContext()).load(userInformation.getProfileUri()).into(circleImageView);
 
         mRecycler = rootView.findViewById(R.id.all_user_post_recycler_view);
         mRecycler.setHasFixedSize(true);
 
+        if (isNetworkvailable(getActivity())) {
+
+            fetch();
+
+        } else {
+
+        }
+
         return rootView;
     }
-
 
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        if(isNetworkvailable(getActivity())){
 
-            fetch();
-
-        }else {
-
-        }
 
 
     }
@@ -114,12 +104,17 @@ public class AllUsersPostFragment extends Fragment {
             @NonNull
             @Override
             public AllUserPostViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
+
                 LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
                 return new AllUserPostViewHolder(inflater.inflate(R.layout.item_all_user_post, viewGroup, false));
             }
 
             @Override
-            protected void onBindViewHolder(@NonNull AllUserPostViewHolder viewHolder, int position, @NonNull final Post model) {
+            protected void onBindViewHolder(@NonNull final AllUserPostViewHolder viewHolder, int position, @NonNull final Post model) {
+
+                viewHolder.progressBar.setVisibility(View.GONE);
+                viewHolder.authorpic.setVisibility(View.VISIBLE);
+
                 final DatabaseReference postRef = getRef(position);
 
 
@@ -128,9 +123,11 @@ public class AllUsersPostFragment extends Fragment {
                     @Override
                     public void onClick(View v) {
 
-                        Intent intent = new Intent(getActivity(), PostDetailActivity.class);
-                        intent.putExtra(PostDetailActivity.EXTRA_POST_KEY, postKey);
-                        startActivity(intent);
+                        Toast.makeText(getContext(), "Hello", Toast.LENGTH_SHORT).show();
+
+//                        Intent intent = new Intent(getActivity(), PostDetailActivity.class);
+//                        intent.putExtra(PostDetailActivity.EXTRA_POST_KEY, postKey);
+//                        startActivity(intent);
                     }
                 });
 
@@ -140,11 +137,25 @@ public class AllUsersPostFragment extends Fragment {
                     viewHolder.starView.setImageResource(R.drawable.star_border);
                 }
 
-                UserInformation userInformation = new UserInformation();
-                //Picasso.get().load(userInformation.getProfileUri()).into(viewHolder.authorpic);
-               // viewHolder.authorpic.setImageResource(R.drawable.star_border);
-               // viewHolder.authorpic.setImageURI(Uri.parse(userInformation.getProfileUri()));
-                Glide.with(Objects.requireNonNull(getContext())).load(userInformation.getProfileUri()).into(viewHolder.authorpic);
+
+                mDatabase.child("users/" + model.getUid()).addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                        UserInformation userInformation = dataSnapshot.getValue(UserInformation.class);
+                        Log.d(TAG, "onDataChange: " + userInformation.getProfileUri());
+                        if (userInformation.getProfileUri().equals("default") ) {
+                            Glide.with(requireContext()).load(R.drawable.user).into(viewHolder.authorpic);
+                        } else {
+                            Glide.with(requireContext()).load(userInformation.getProfileUri()).into(viewHolder.authorpic);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
 
 
                 viewHolder.bindToPost(model, new View.OnClickListener() {
@@ -215,22 +226,20 @@ public class AllUsersPostFragment extends Fragment {
         return Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
     }
 
-    private static boolean isNetworkvailable(Context con){
-        try{
+    private static boolean isNetworkvailable(Context con) {
+        try {
 
             ConnectivityManager cm = (ConnectivityManager) con.getSystemService(Context.CONNECTIVITY_SERVICE);
             assert cm != null;
             NetworkInfo networkInfo = cm.getActiveNetworkInfo();
-            if(networkInfo != null && networkInfo.isConnected()){
+            if (networkInfo != null && networkInfo.isConnected()) {
                 return true;
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return false;
     }
-
-
 
 
 

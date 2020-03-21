@@ -1,20 +1,22 @@
-package com.example.letsdiscusstodo;
+package com.example.letsdiscusstodo.activities;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.example.letsdiscusstodo.R;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.auth.User;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class SignUpActivity extends AppCompatActivity {
@@ -113,9 +115,12 @@ public class SignUpActivity extends AppCompatActivity {
             public void onSuccess(AuthResult authResult) {
                 mProgressDialog.dismiss();
 
-                startActivity(new Intent(getApplicationContext(), UserInfoActivity.class));
+
+                Intent intent = new Intent(new Intent(getApplicationContext(), UserInfoActivity.class));
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK |Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
                 Toast.makeText(getApplicationContext(), "SignUp Complete", Toast.LENGTH_SHORT).show();
-                finish();
+
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -138,6 +143,46 @@ public class SignUpActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+
+        alertDialog();
+
+    }
+
+    private void alertDialog() {
+
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCancelable(false).setTitle("You are sure to exit?");
+
+        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        }).setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+
+        final AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+
+        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                alertDialog.dismiss();
+                finish();
+
+            }
+        });
+
+        alertDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                alertDialog.dismiss();
+            }
+        });
 
     }
 

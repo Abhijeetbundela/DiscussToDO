@@ -13,8 +13,49 @@ public class Post {
     public String uid;
     public String author;
     public String title;
+
+    public String getUid() {
+        return uid;
+    }
+
+    public void setUid(String uid) {
+        this.uid = uid;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public int getStarCount() {
+        return starCount;
+    }
+
+    public void setStarCount(int starCount) {
+        this.starCount = starCount;
+    }
+
+    public Map<String, Boolean> getStars() {
+        return stars;
+    }
+
+    public void setStars(Map<String, Boolean> stars) {
+        this.stars = stars;
+    }
+
+    public Post(String uid, String author, String title, String body, int starCount, Map<String, Boolean> stars) {
+        this.uid = uid;
+        this.author = author;
+        this.title = title;
+        this.body = body;
+        this.starCount = starCount;
+        this.stars = stars;
+    }
+
     public String body;
-   // public String profile;
     public int starCount = 0;
     public Map<String, Boolean> stars = new HashMap<>();
 
@@ -27,7 +68,7 @@ public class Post {
         this.author = author;
         this.title = title;
         this.body = body;
-      //  this.profile = profile;
+
     }
 
     @Exclude
@@ -39,7 +80,7 @@ public class Post {
         result.put("body", body);
         result.put("starCount", starCount);
         result.put("stars", stars);
-      //  result.put("profile",profile);
+
 
         return result;
     }

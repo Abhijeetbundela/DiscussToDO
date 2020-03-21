@@ -1,10 +1,11 @@
-package com.example.letsdiscusstodo;
+package com.example.letsdiscusstodo.activities;
 
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.letsdiscusstodo.R;
 import com.example.letsdiscusstodo.model.Post;
 import com.example.letsdiscusstodo.model.UserInformation;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
