@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "37686043403",
+    "firebase_url": "https://discusstodo.firebaseio.com",
+    "project_id": "discusstodo",
+    "storage_bucket": "discusstodo.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:37686043403:android:32a849124503e3fc4ef80e",
+        "android_client_info": {
+          "package_name": "com.example.letsdiscusstodo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "37686043403-0acmj3fln79ce42f4uo5n6bkgutpgm61.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.letsdiscusstodo",
+            "certificate_hash": "30f2a573b3406bbb326e4ee530fa6c1bb8da0ddc"
+          }
+        },
+        {
+          "client_id": "37686043403-jjrprk33kom1d773du71tmk0316gv1vf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2W7UqapOdxFISYKNB3-YiUAElXwFUXrE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "37686043403-jjrprk33kom1d773du71tmk0316gv1vf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
