@@ -2,6 +2,7 @@ package com.example.letsdiscusstodo.activities;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,10 +11,12 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.example.letsdiscusstodo.R;
 import com.example.letsdiscusstodo.model.Comment;
 import com.example.letsdiscusstodo.model.Post;
 import com.example.letsdiscusstodo.model.User;
+import com.example.letsdiscusstodo.model.UserInformation;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -25,26 +28,36 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import de.hdodenhof.circleimageview.CircleImageView;
 
 public class PostDetailActivity extends AppCompatActivity implements View.OnClickListener {
 
+    private static final String TAG = "PostDetailActivity";
+
     private FirebaseAuth mAuth;
     private String userId;
+    private DatabaseReference mDatabase;
+
+    private UserInformation userInformation;
 
     public static final String EXTRA_POST_KEY = "post_key";
 
     private DatabaseReference mPostReference;
     private DatabaseReference mCommentsReference;
+
     private ValueEventListener mPostListener;
-    private String mPostKey;
+    private String mPostKey, mPostUserUid;
     private CommentAdapter mAdapter;
 
     private TextView mAuthorView;
     private TextView mTitleView;
     private TextView mBodyView;
+    private CircleImageView mPostUserPhoto;
     private EditText mCommentField;
     private Button mCommentButton;
     private RecyclerView mCommentsRecycler;
@@ -53,12 +66,14 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_home);
+        setContentView(R.layout.activity_post_detail);
 
         getSupportActionBar().setTitle("PostDetails");
 
+
         mAuth = FirebaseAuth.getInstance();
         userId = mAuth.getUid();
+        mDatabase = FirebaseDatabase.getInstance().getReference();
 
 
         mPostKey = getIntent().getStringExtra(EXTRA_POST_KEY);
@@ -79,16 +94,67 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
         mCommentField = findViewById(R.id.fieldCommentText);
         mCommentButton = findViewById(R.id.buttonPostComment);
         mCommentsRecycler = findViewById(R.id.recyclerPostComments);
+        mPostUserPhoto = findViewById(R.id.postUserPhoto);
 
         mCommentButton.setOnClickListener(this);
         mCommentsRecycler.setLayoutManager(new LinearLayoutManager(this));
+
+        //DatabaseReference postUserUid =  mDatabase.child("posts/" + mPostKey);
+
+//        mDatabase.child("posts/" + mPostKey).addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//
+//                Post post = dataSnapshot.getValue(Post.class);
+//
+//                mPostUserUid = post.getUid();
+//
+//                Log.d(TAG, "Abhi Post ref:  " + mPostUserUid);
+//
+//
+//
+//
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        });
+
+
+
+
+//        mDatabase.child("users/" + mPostUserUid).addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//
+//                userInformation = dataSnapshot.getValue(UserInformation.class);
+//
+//                Log.d(TAG, "User Post ref:  " + mPostUserUid);
+//               // Log.d(TAG, "getProfileUri()  " + userInformation.getUserName());
+//
+//
+////                if (userInformation.getProfileUri().equals("default") ) {
+////                    mPostUserPhoto.setImageResource(R.drawable.user);
+////
+////                } else {
+////                    Glide.with(getApplicationContext()).load(userInformation.getProfileUri()).into(mPostUserPhoto);
+////                }
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        });
+
 
     }
 
     @Override
     public void onStart() {
         super.onStart();
-
 
         ValueEventListener postListener = new ValueEventListener() {
             @Override
@@ -112,9 +178,7 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
         };
         mPostReference.addValueEventListener(postListener);
 
-
         mPostListener = postListener;
-
 
         mAdapter = new CommentAdapter(this, mCommentsReference);
         mCommentsRecycler.setAdapter(mAdapter);
@@ -124,11 +188,9 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
     public void onStop() {
         super.onStop();
 
-
         if (mPostListener != null) {
             mPostReference.removeEventListener(mPostListener);
         }
-
 
         mAdapter.cleanupListener();
     }
@@ -148,8 +210,8 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
 
-                        User user = dataSnapshot.getValue(User.class);
-                        String authorName = user.username;
+                        UserInformation user = dataSnapshot.getValue(UserInformation.class);
+                        String authorName = user.getUserName();
 
 
                         String commentText = mCommentField.getText().toString();
@@ -171,15 +233,19 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
 
     private static class CommentViewHolder extends RecyclerView.ViewHolder {
 
-        public TextView authorView;
-        public TextView bodyView;
+        private TextView authorView;
+        private TextView bodyView;
+        private CircleImageView commentUserPhoto;
 
-        public CommentViewHolder(View itemView) {
+
+        private CommentViewHolder(View itemView) {
             super(itemView);
 
             authorView = itemView.findViewById(R.id.commentAuthor);
             bodyView = itemView.findViewById(R.id.commentBody);
+            commentUserPhoto = itemView.findViewById(R.id.commentPhoto);
         }
+
     }
 
     private static class CommentAdapter extends RecyclerView.Adapter<CommentViewHolder> {
@@ -187,6 +253,9 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
         private Context mContext;
         private DatabaseReference mDatabaseReference;
         private ChildEventListener mChildEventListener;
+        private FirebaseAuth mAuth;
+        private String userId;
+        private DatabaseReference mDatabase;
 
         private List<String> mCommentIds = new ArrayList<>();
         private List<Comment> mComments = new ArrayList<>();
@@ -213,7 +282,6 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
                 public void onChildChanged(DataSnapshot dataSnapshot, String previousChildName) {
 
 
-
                     Comment newComment = dataSnapshot.getValue(Comment.class);
                     String commentKey = dataSnapshot.getKey();
 
@@ -233,7 +301,6 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
 
                 @Override
                 public void onChildRemoved(DataSnapshot dataSnapshot) {
-
 
 
                     String commentKey = dataSnapshot.getKey();
@@ -281,10 +348,36 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
         }
 
         @Override
-        public void onBindViewHolder(CommentViewHolder holder, int position) {
+        public void onBindViewHolder(final CommentViewHolder holder, int position) {
+
+            mAuth = FirebaseAuth.getInstance();
+            userId = mAuth.getUid();
+            mDatabase = FirebaseDatabase.getInstance().getReference();
+
             Comment comment = mComments.get(position);
             holder.authorView.setText(comment.author);
             holder.bodyView.setText(comment.text);
+
+//            mDatabase.child("users/" + userId).addValueEventListener(new ValueEventListener() {
+//                @Override
+//                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//
+//                    UserInformation userInformation = dataSnapshot.getValue(UserInformation.class);
+//
+//                    if (userInformation.getProfileUri().equals("default")) {
+//                        Glide.with(mContext).load(R.drawable.user).into(holder.commentUserPhoto);
+//                    } else {
+//                        Glide.with(mContext).load(userInformation.getProfileUri()).into(holder.commentUserPhoto);
+//                    }
+//                }
+//
+//                @Override
+//                public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//                }
+//            });
+
+
         }
 
         @Override

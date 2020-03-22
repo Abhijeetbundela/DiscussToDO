@@ -13,6 +13,7 @@ public class Post {
     public String uid;
     public String author;
     public String title;
+    public String date;
 
     public String getUid() {
         return uid;
@@ -46,13 +47,22 @@ public class Post {
         this.stars = stars;
     }
 
-    public Post(String uid, String author, String title, String body, int starCount, Map<String, Boolean> stars) {
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public Post(String uid, String author, String title, String body, int starCount, Map<String, Boolean> stars, String date) {
         this.uid = uid;
         this.author = author;
         this.title = title;
         this.body = body;
         this.starCount = starCount;
         this.stars = stars;
+        this.date = date;
     }
 
     public String body;
@@ -63,11 +73,12 @@ public class Post {
         // Default constructor
     }
 
-    public Post(String uid, String author, String title, String body) {
+    public Post(String uid, String author, String title, String body, String date) {
         this.uid = uid;
         this.author = author;
         this.title = title;
         this.body = body;
+        this.date = date;
 
     }
 
@@ -80,6 +91,7 @@ public class Post {
         result.put("body", body);
         result.put("starCount", starCount);
         result.put("stars", stars);
+        result.put("date", date);
 
 
         return result;

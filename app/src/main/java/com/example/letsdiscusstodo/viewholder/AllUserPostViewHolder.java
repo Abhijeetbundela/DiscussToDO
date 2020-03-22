@@ -14,7 +14,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class AllUserPostViewHolder extends RecyclerView.ViewHolder {
 
-    public TextView titleView;
+    public TextView titleView, allUserPostdateView;
     public TextView userView;
     public ImageView starView;
     public CircleImageView authorpic;
@@ -35,6 +35,7 @@ public class AllUserPostViewHolder extends RecyclerView.ViewHolder {
         bodyView = itemView.findViewById(R.id.postBody);
         authorpic = itemView.findViewById(R.id.postAuthorPhoto);
         progressBar = itemView.findViewById(R.id.image_progressBar);
+        allUserPostdateView = itemView.findViewById(R.id.all_user_post_date);
 
 
     }
@@ -44,6 +45,7 @@ public class AllUserPostViewHolder extends RecyclerView.ViewHolder {
         userView.setText(post.author);
         numStarsView.setText(String.valueOf(post.starCount));
         bodyView.setText(post.body);
+        allUserPostdateView.setText(post.getDate());
         starView.setOnClickListener(starClickListener);
 
 

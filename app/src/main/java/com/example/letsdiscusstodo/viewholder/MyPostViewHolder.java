@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 public class MyPostViewHolder extends RecyclerView.ViewHolder {
 
-    public TextView mMyPostTitle, mMyPostStarsCount, mMyPostbody;
+    public TextView mMyPostTitle, mMyPostStarsCount, mMyPostbody, myPostdateView;
     public ImageView mMyPoststar;
 
     public MyPostViewHolder(@NonNull View itemView) {
@@ -22,6 +22,7 @@ public class MyPostViewHolder extends RecyclerView.ViewHolder {
         mMyPostbody = itemView.findViewById(R.id.my_post_body);
         mMyPoststar = itemView.findViewById(R.id.my_post_star);
         mMyPostStarsCount = itemView.findViewById(R.id.my_post_star_count);
+        myPostdateView = itemView.findViewById(R.id.my_post_date);
 
 
     }
@@ -30,7 +31,7 @@ public class MyPostViewHolder extends RecyclerView.ViewHolder {
         mMyPostTitle.setText(post.title);
         mMyPostbody.setText(post.body);
         mMyPostStarsCount.setText(String.valueOf(post.starCount));
-
+        myPostdateView.setText(post.getDate());
         mMyPoststar.setOnClickListener(starClickListener);
     }
 }

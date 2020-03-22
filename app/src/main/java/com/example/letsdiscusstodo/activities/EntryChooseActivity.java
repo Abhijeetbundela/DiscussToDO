@@ -100,9 +100,7 @@ public class EntryChooseActivity extends AppCompatActivity implements View.OnCli
 
                         mProgressDialog.dismiss();
 
-                        Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
-//                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-//                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        Intent intent = new Intent(getApplicationContext(), UserInfoActivity.class);
                         startActivity(intent);
                         finish();
 
@@ -141,8 +139,9 @@ public class EntryChooseActivity extends AppCompatActivity implements View.OnCli
             case R.id.email_include: {
 
                 Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK   );
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK  );
                 startActivity(intent);
+
                 break;
             }
 

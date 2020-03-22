@@ -28,6 +28,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.DateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -228,14 +230,16 @@ public class HomeActivity extends AppCompatActivity {
 
                                     UserInformation user = dataSnapshot.getValue(UserInformation.class);
 
+                                    String mDate = DateFormat.getDateInstance().format(new Date());
+
                                     if (user != null) {
-                                        writeNewPost(userId, user.getUserName(), title, note);
+                                        writeNewPost(userId, user.getUserName(), title, note, mDate);
                                     } else {
 
                                         mProgressDialog.dismiss();
 
                                         Toast.makeText(getApplicationContext(),
-                                                "Complete the user profile details then you can post notes.",
+                                                "Complete the user profile details then you can post.",
                                                 Toast.LENGTH_SHORT).show();
 
                                     }
@@ -297,10 +301,10 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-    private void writeNewPost(String userId, String username, String title, String body) {
+    private void writeNewPost(String userId, String username, String title, String body , String mDate) {
 
         String key = mDatabase.child("posts").push().getKey();
-        Post post = new Post(userId, username, title, body);
+        Post post = new Post(userId, username, title, body, mDate);
         Map<String, Object> postValues = post.toMap();
 
         Map<String, Object> childUpdates = new HashMap<>();
@@ -311,4 +315,6 @@ public class HomeActivity extends AppCompatActivity {
 
         mProgressDialog.dismiss();
     }
+
+
 }

@@ -118,16 +118,21 @@ public class AllUsersPostFragment extends Fragment {
                 final DatabaseReference postRef = getRef(position);
 
 
+
                 final String postKey = postRef.getKey();
+
                 viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
 
                         Toast.makeText(getContext(), "Hello", Toast.LENGTH_SHORT).show();
 
-//                        Intent intent = new Intent(getActivity(), PostDetailActivity.class);
-//                        intent.putExtra(PostDetailActivity.EXTRA_POST_KEY, postKey);
-//                        startActivity(intent);
+                        Log.d(TAG, "Abhi Post ref: 130 " + postKey);
+
+                        Intent intent = new Intent(getActivity(), PostDetailActivity.class);
+                        intent.putExtra("post_key", postKey);
+                        startActivity(intent);
+
                     }
                 });
 

@@ -2,6 +2,7 @@ package com.example.letsdiscusstodo.activities;
 
 import android.app.Activity;
 import android.content.ContentResolver;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -33,6 +34,7 @@ import com.google.firebase.storage.UploadTask;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -50,7 +52,6 @@ public class UserInfoActivity extends AppCompatActivity {
 
     private DatabaseReference mDatabase;
 
-
     private String userId;
 
     private FirebaseFirestore database;
@@ -65,6 +66,8 @@ public class UserInfoActivity extends AppCompatActivity {
 
     private MyProgressDialog mMyProgressDialog;
 
+    private boolean userDataStatus ;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +75,9 @@ public class UserInfoActivity extends AppCompatActivity {
         setContentView(R.layout.activity_user_info);
 
         getSupportActionBar().setTitle("Profile");
+
+
+
 
         mUserName = findViewById(R.id.user_name);
         mUserAbout = findViewById(R.id.user_about);
@@ -85,6 +91,7 @@ public class UserInfoActivity extends AppCompatActivity {
 
         database = FirebaseFirestore.getInstance();
 
+
         mStorageRef = FirebaseStorage.getInstance().getReference("images/profileImages/");
         // mDatabaseReference = FirebaseDatabase.getInstance().getReference("uploads");
 
@@ -96,6 +103,8 @@ public class UserInfoActivity extends AppCompatActivity {
 
 
                 if (dataSnapshot.exists()) {
+
+                    userDataStatus = false;
 
                     UserInformation userInformation = dataSnapshot.getValue(UserInformation.class);
                     Log.d("Abhijeet", "onDataChange: " + userInformation.getProfileUri());
@@ -109,6 +118,8 @@ public class UserInfoActivity extends AppCompatActivity {
                         Glide.with(getApplicationContext()).load(userInformation.getProfileUri()).into(mUserPic);
                     }
 
+                }else {
+                    userDataStatus = true;
                 }
 
 
@@ -119,6 +130,7 @@ public class UserInfoActivity extends AppCompatActivity {
 
             }
         });
+
 
 
         mMyProgressDialog.setTitle("Uploading.....");
@@ -276,8 +288,10 @@ public class UserInfoActivity extends AppCompatActivity {
                 mMyProgressDialog.dismiss();
 
                 Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+
                 startActivity(intent);
+                finish();
 
 
             }
@@ -349,6 +363,74 @@ public class UserInfoActivity extends AppCompatActivity {
 //            }
         }
 
+
+    }
+
+
+    @Override
+    public void onBackPressed() {
+
+        if (userDataStatus) {
+            alertDialog();
+        } else {
+
+            Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            startActivity(intent);
+            finish();
+        }
+
+
+    }
+
+    private void alertDialog() {
+
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCancelable(false).setTitle("You are sure to exit?").setMessage("If 'Yes' then you will not able to write a post.");
+
+        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        }).setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+
+        final AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+
+        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                alertDialog.dismiss();
+                Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+                startActivity(intent);
+                finish();
+
+            }
+        });
+
+        alertDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                alertDialog.dismiss();
+            }
+        });
+
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+
+        onBackPressed();
+        return true;
 
     }
 
