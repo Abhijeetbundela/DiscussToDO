@@ -206,7 +206,7 @@ public class MyPostsFragment extends Fragment {
 
 
                     }
-                }).setNeutralButton("No", new DialogInterface.OnClickListener() {
+                }).setNegativeButton("No", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
@@ -244,7 +244,7 @@ public class MyPostsFragment extends Fragment {
             public void onClick(DialogInterface dialog, int which) {
 
             }
-        }).setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
+        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
@@ -326,7 +326,7 @@ public class MyPostsFragment extends Fragment {
             }
         });
 
-        alertDialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener(new View.OnClickListener() {
+        alertDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 alertDialog.dismiss();
@@ -460,12 +460,7 @@ public class MyPostsFragment extends Fragment {
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
                     }
-                }).setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-            }
-        });
+                });
 
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
