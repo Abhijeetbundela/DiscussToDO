@@ -15,7 +15,6 @@ import com.bumptech.glide.Glide;
 import com.example.letsdiscusstodo.R;
 import com.example.letsdiscusstodo.model.Comment;
 import com.example.letsdiscusstodo.model.Post;
-import com.example.letsdiscusstodo.model.User;
 import com.example.letsdiscusstodo.model.UserInformation;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
@@ -27,6 +26,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -43,7 +43,6 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
     private String userId;
     private DatabaseReference mDatabase;
 
-    private UserInformation userInformation;
 
     public static final String EXTRA_POST_KEY = "post_key";
 
@@ -51,18 +50,19 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
     private DatabaseReference mCommentsReference;
 
     private ValueEventListener mPostListener;
-    private String mPostKey, mPostUserUid;
+    private String mPostKey, mPostUserUid, mCommentUserUid;
     private CommentAdapter mAdapter;
 
-    private TextView mAuthorView;
-    private TextView mTitleView;
-    private TextView mBodyView;
+    private TextView mAuthorView, mTitleView, mBodyView;
+
     private CircleImageView mPostUserPhoto;
     private EditText mCommentField;
     private Button mCommentButton;
     private RecyclerView mCommentsRecycler;
 
+
     @Override
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -73,7 +73,6 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
 
         mAuth = FirebaseAuth.getInstance();
         userId = mAuth.getUid();
-        mDatabase = FirebaseDatabase.getInstance().getReference();
 
 
         mPostKey = getIntent().getStringExtra(EXTRA_POST_KEY);
@@ -99,55 +98,48 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
         mCommentButton.setOnClickListener(this);
         mCommentsRecycler.setLayoutManager(new LinearLayoutManager(this));
 
-        //DatabaseReference postUserUid =  mDatabase.child("posts/" + mPostKey);
+        mPostReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
-//        mDatabase.child("posts/" + mPostKey).addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//
-//                Post post = dataSnapshot.getValue(Post.class);
-//
-//                mPostUserUid = post.getUid();
-//
-//                Log.d(TAG, "Abhi Post ref:  " + mPostUserUid);
-//
-//
-//
-//
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError databaseError) {
-//
-//            }
-//        });
+                Post post = dataSnapshot.getValue(Post.class);
+
+                mPostUserUid = post.getUid();
+
+//                Log.d(TAG, "User Post ref :  " + mPostUserUid);
+
+                mDatabase = FirebaseDatabase.getInstance().getReference().child("users/" + mPostUserUid);
+
+                mDatabase.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                        UserInformation userInformation = dataSnapshot.getValue(UserInformation.class);
 
 
+                        if (userInformation.getProfileUri().equals("default")) {
+                            mPostUserPhoto.setImageResource(R.drawable.user);
+
+                        } else {
+                            Glide.with(getApplicationContext()).load(userInformation.getProfileUri()).into(mPostUserPhoto);
+                        }
 
 
-//        mDatabase.child("users/" + mPostUserUid).addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//
-//                userInformation = dataSnapshot.getValue(UserInformation.class);
-//
-//                Log.d(TAG, "User Post ref:  " + mPostUserUid);
-//               // Log.d(TAG, "getProfileUri()  " + userInformation.getUserName());
-//
-//
-////                if (userInformation.getProfileUri().equals("default") ) {
-////                    mPostUserPhoto.setImageResource(R.drawable.user);
-////
-////                } else {
-////                    Glide.with(getApplicationContext()).load(userInformation.getProfileUri()).into(mPostUserPhoto);
-////                }
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError databaseError) {
-//
-//            }
-//        });
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
 
 
     }
@@ -215,13 +207,17 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
 
 
                         String commentText = mCommentField.getText().toString();
-                        Comment comment = new Comment(userId, authorName, commentText);
+
+                        if (commentText.isEmpty()) {
+                            Toast.makeText(getApplicationContext(), "Comment can't be empty.", Toast.LENGTH_SHORT).show();
+
+                        } else {
+                            Comment comment = new Comment(userId, authorName, commentText);
+                            mCommentsReference.push().setValue(comment);
+                            mCommentField.setText(null);
+                        }
 
 
-                        mCommentsReference.push().setValue(comment);
-
-
-                        mCommentField.setText(null);
                     }
 
                     @Override
@@ -231,12 +227,11 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
                 });
     }
 
-    private static class CommentViewHolder extends RecyclerView.ViewHolder {
+    private class CommentViewHolder extends RecyclerView.ViewHolder {
 
         private TextView authorView;
         private TextView bodyView;
         private CircleImageView commentUserPhoto;
-
 
         private CommentViewHolder(View itemView) {
             super(itemView);
@@ -248,14 +243,11 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
 
     }
 
-    private static class CommentAdapter extends RecyclerView.Adapter<CommentViewHolder> {
+    private class CommentAdapter extends RecyclerView.Adapter<CommentViewHolder> {
 
         private Context mContext;
         private DatabaseReference mDatabaseReference;
         private ChildEventListener mChildEventListener;
-        private FirebaseAuth mAuth;
-        private String userId;
-        private DatabaseReference mDatabase;
 
         private List<String> mCommentIds = new ArrayList<>();
         private List<Comment> mComments = new ArrayList<>();
@@ -264,15 +256,14 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
             mContext = context;
             mDatabaseReference = ref;
 
-
             ChildEventListener childEventListener = new ChildEventListener() {
                 @Override
                 public void onChildAdded(DataSnapshot dataSnapshot, String previousChildName) {
 
-
                     Comment comment = dataSnapshot.getValue(Comment.class);
 
                     mCommentIds.add(dataSnapshot.getKey());
+
                     mComments.add(comment);
                     notifyItemInserted(mComments.size() - 1);
 
@@ -290,7 +281,6 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
                     if (commentIndex > -1) {
 
                         mComments.set(commentIndex, newComment);
-
 
                         notifyItemChanged(commentIndex);
                     } else {
@@ -340,6 +330,7 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
             mChildEventListener = childEventListener;
         }
 
+
         @Override
         public CommentViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             LayoutInflater inflater = LayoutInflater.from(mContext);
@@ -348,27 +339,83 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
         }
 
         @Override
-        public void onBindViewHolder(final CommentViewHolder holder, int position) {
-
-            mAuth = FirebaseAuth.getInstance();
-            userId = mAuth.getUid();
-            mDatabase = FirebaseDatabase.getInstance().getReference();
+        public void onBindViewHolder(final CommentViewHolder holder, final int position) {
 
             Comment comment = mComments.get(position);
             holder.authorView.setText(comment.author);
             holder.bodyView.setText(comment.text);
 
-//            mDatabase.child("users/" + userId).addValueEventListener(new ValueEventListener() {
+//            DatabaseReference mCommentsReference = FirebaseDatabase.getInstance().getReference()
+//                    .child("post-comments").child(mPostKey).push();
+
+//            Log.d(TAG,"OnBindViewHolder : " + mCommentsReference);
+
+//            mCommentsReference.addChildEventListener(new ChildEventListener() {
 //                @Override
-//                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 //
-//                    UserInformation userInformation = dataSnapshot.getValue(UserInformation.class);
+//                    final DatabaseReference data = FirebaseDatabase.getInstance().getReference().child("post-comments").child(mPostKey).child(Objects.requireNonNull(dataSnapshot.getKey()));
 //
-//                    if (userInformation.getProfileUri().equals("default")) {
-//                        Glide.with(mContext).load(R.drawable.user).into(holder.commentUserPhoto);
-//                    } else {
-//                        Glide.with(mContext).load(userInformation.getProfileUri()).into(holder.commentUserPhoto);
-//                    }
+//                    data.addValueEventListener(new ValueEventListener() {
+//                        @Override
+//                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//
+//                            Log.d(TAG, "onChildAdded " + dataSnapshot);
+//
+//                            Comment comment = dataSnapshot.getValue(Comment.class);
+//
+//                            String commentUserUid = comment.getUid();
+//
+//                            DatabaseReference userdata = FirebaseDatabase.getInstance().getReference("users/" + commentUserUid);
+//
+//                            userdata.addListenerForSingleValueEvent(new ValueEventListener() {
+//                                @Override
+//                                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                                    UserInformation userInformation = dataSnapshot.getValue(UserInformation.class);
+//
+//                                    Log.d(TAG, "onChildAdded " + userInformation.getProfileUri());
+//
+//                                    if (userInformation.getProfileUri().equals("default")) {
+//
+//                                        holder.commentUserPhoto.setImageResource(R.drawable.user);
+//
+//                                    } else {
+//                                        Glide.with(getApplicationContext()).load(userInformation.getProfileUri()).into(holder.commentUserPhoto);
+//                                    }
+//                                }
+//
+//                                @Override
+//                                public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//                                }
+//                            });
+//
+//
+//                        }
+//
+//                        @Override
+//                        public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//                        }
+//                    });
+//
+//
+//                }
+//
+//                @Override
+//                public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//
+//
+//                }
+//
+//                @Override
+//                public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+//
+//                }
+//
+//                @Override
+//                public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//
 //                }
 //
 //                @Override
@@ -393,3 +440,5 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
 
     }
 }
+
+

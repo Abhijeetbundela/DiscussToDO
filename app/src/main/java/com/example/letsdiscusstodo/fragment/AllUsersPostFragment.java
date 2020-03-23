@@ -8,14 +8,19 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.example.letsdiscusstodo.activities.PostDetailActivity;
 import com.example.letsdiscusstodo.R;
+import com.example.letsdiscusstodo.activities.EntryChooseActivity;
+import com.example.letsdiscusstodo.activities.PostCommentActivity;
+import com.example.letsdiscusstodo.activities.PostDetailActivity;
+import com.example.letsdiscusstodo.activities.UserInfoActivity;
 import com.example.letsdiscusstodo.model.Post;
 import com.example.letsdiscusstodo.model.UserInformation;
 import com.example.letsdiscusstodo.viewholder.AllUserPostViewHolder;
@@ -37,7 +42,6 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import de.hdodenhof.circleimageview.CircleImageView;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -47,6 +51,8 @@ public class AllUsersPostFragment extends Fragment {
     private static final String TAG = "RecentPostsFragment";
 
     private DatabaseReference mDatabase;
+
+    private FirebaseAuth mAuth;
 
     private FirebaseRecyclerAdapter<Post, AllUserPostViewHolder> mAdapter;
     private RecyclerView mRecycler;
@@ -63,6 +69,9 @@ public class AllUsersPostFragment extends Fragment {
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
+        setHasOptionsMenu(true);
+
+        mAuth = FirebaseAuth.getInstance();
 
         mRecycler = rootView.findViewById(R.id.all_user_post_recycler_view);
         mRecycler.setHasFixedSize(true);
@@ -82,8 +91,6 @@ public class AllUsersPostFragment extends Fragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
-
 
 
     }
@@ -117,8 +124,6 @@ public class AllUsersPostFragment extends Fragment {
 
                 final DatabaseReference postRef = getRef(position);
 
-
-
                 final String postKey = postRef.getKey();
 
                 viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
@@ -149,7 +154,7 @@ public class AllUsersPostFragment extends Fragment {
 
                         UserInformation userInformation = dataSnapshot.getValue(UserInformation.class);
                         Log.d(TAG, "onDataChange: " + userInformation.getProfileUri());
-                        if (userInformation.getProfileUri().equals("default") ) {
+                        if (userInformation.getProfileUri().equals("default")) {
                             Glide.with(requireContext()).load(R.drawable.user).into(viewHolder.authorpic);
                         } else {
                             Glide.with(requireContext()).load(userInformation.getProfileUri()).into(viewHolder.authorpic);
@@ -228,7 +233,7 @@ public class AllUsersPostFragment extends Fragment {
     }
 
     private String getUid() {
-        return Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+        return Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
     }
 
     private static boolean isNetworkvailable(Context con) {
@@ -246,6 +251,32 @@ public class AllUsersPostFragment extends Fragment {
         return false;
     }
 
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_main,menu);
 
+        super.onCreateOptionsMenu(menu, inflater);
+    }
 
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.log_out: {
+
+                startActivity(new Intent(getContext(), EntryChooseActivity.class));
+                mAuth.signOut();
+                return true;
+            }
+
+            case R.id.user_info: {
+
+                startActivity(new Intent(getContext(), UserInfoActivity.class));
+                return true;
+            }
+
+            default:
+                return super.onOptionsItemSelected(item);
+
+        }
+    }
 }

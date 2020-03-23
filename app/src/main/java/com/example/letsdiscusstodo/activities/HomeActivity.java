@@ -11,12 +11,10 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.example.letsdiscusstodo.R;
-import com.example.letsdiscusstodo.activities.EntryChooseActivity;
 import com.example.letsdiscusstodo.fragment.AllUsersPostFragment;
 import com.example.letsdiscusstodo.fragment.MyPostsFragment;
 import com.example.letsdiscusstodo.fragment.MyTopPostsFragment;
 import com.example.letsdiscusstodo.model.Post;
-import com.example.letsdiscusstodo.model.User;
 import com.example.letsdiscusstodo.model.UserInformation;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
@@ -28,7 +26,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -230,9 +229,16 @@ public class HomeActivity extends AppCompatActivity {
 
                                     UserInformation user = dataSnapshot.getValue(UserInformation.class);
 
-                                    String mDate = DateFormat.getDateInstance().format(new Date());
+                                    SimpleDateFormat sdf = new SimpleDateFormat("dd MMM \n\t\thh:mm a");
+                                    Calendar calendar = Calendar.getInstance();
+                                    String currentDate = sdf.format(calendar.getTime());
+                                    SimpleDateFormat sdf_ = new SimpleDateFormat("EEE");
+                                    Date date = new Date();
+                                    String dayName = sdf_.format(date);
+                                    String mDate = dayName + ", " + currentDate;
 
                                     if (user != null) {
+                                        Toast.makeText(getApplicationContext(), "Posted", Toast.LENGTH_SHORT).show();
                                         writeNewPost(userId, user.getUserName(), title, note, mDate);
                                     } else {
 
@@ -270,38 +276,9 @@ public class HomeActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
 
-    }
 
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.log_out: {
-
-                startActivity(new Intent(this, EntryChooseActivity.class));
-                mAuth.signOut();
-                finish();
-                return true;
-            }
-
-            case R.id.user_info: {
-
-                startActivity(new Intent(this, UserInfoActivity.class));
-                finish();
-                return true;
-            }
-
-            default:
-                return super.onOptionsItemSelected(item);
-
-        }
-    }
-
-    private void writeNewPost(String userId, String username, String title, String body , String mDate) {
+    private void writeNewPost(String userId, String username, String title, String body, String mDate) {
 
         String key = mDatabase.child("posts").push().getKey();
         Post post = new Post(userId, username, title, body, mDate);

@@ -12,12 +12,14 @@
         android:roundIcon="@drawable/app_icon"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".activities.PostCommentActivity"></activity>
         <activity android:name=".activities.PostDetailActivity" />
         <activity android:name=".activities.NewPostActivity" />
         <activity
             android:name="com.theartofdev.edmodo.cropper.CropImageActivity"
             android:theme="@style/Base.Theme.AppCompat" />
-        <activity android:name=".activities.HomeActivity" /> <!-- android:theme="@style/AppTheme.NoActionBar"/> -->
+        <activity android:name=".activities.HomeActivity"
+            />
         <activity android:name=".activities.ForgotPasswordActivity" />
         <activity android:name=".activities.UserInfoActivity" />
         <activity android:name=".activities.SignUpActivity" />

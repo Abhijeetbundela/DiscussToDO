@@ -387,7 +387,7 @@ public class UserInfoActivity extends AppCompatActivity {
     private void alertDialog() {
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setCancelable(false).setTitle("You are sure to exit?").setMessage("If 'Yes' then you will not able to write a post.");
+        builder.setCancelable(false).setTitle("Are you sure you want to exit?").setMessage("If 'Yes' then you will not able to write a post.");
 
         builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override

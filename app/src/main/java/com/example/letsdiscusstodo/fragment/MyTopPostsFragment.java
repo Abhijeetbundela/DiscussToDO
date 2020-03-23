@@ -2,13 +2,19 @@ package com.example.letsdiscusstodo.fragment;
 
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.example.letsdiscusstodo.R;
+import com.example.letsdiscusstodo.activities.EntryChooseActivity;
+import com.example.letsdiscusstodo.activities.UserInfoActivity;
 import com.example.letsdiscusstodo.model.Post;
 import com.example.letsdiscusstodo.viewholder.MyTopPostViewHolder;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
@@ -18,6 +24,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -35,6 +42,8 @@ public class MyTopPostsFragment extends Fragment {
     private LinearLayoutManager mManager;
     private ProgressDialog mProgressDialog;
 
+    private FirebaseAuth mAuth;
+
     public MyTopPostsFragment() {
     }
 
@@ -45,6 +54,10 @@ public class MyTopPostsFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_my_top_post, container, false);
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
+
+        setHasOptionsMenu(true);
+
+        mAuth = FirebaseAuth.getInstance();
 
         mRecycler = rootView.findViewById(R.id.my_top_post_recycler_view);
         mRecycler.setHasFixedSize(true);
@@ -127,6 +140,35 @@ public class MyTopPostsFragment extends Fragment {
         if (mAdapter != null) {
           //  mProgressDialog.dismiss();
             mAdapter.stopListening();
+        }
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_main,menu);
+
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.log_out: {
+
+                startActivity(new Intent(getContext(), EntryChooseActivity.class));
+                mAuth.signOut();
+                return true;
+            }
+
+            case R.id.user_info: {
+
+                startActivity(new Intent(getContext(), UserInfoActivity.class));
+                return true;
+            }
+
+            default:
+                return super.onOptionsItemSelected(item);
+
         }
     }
 
