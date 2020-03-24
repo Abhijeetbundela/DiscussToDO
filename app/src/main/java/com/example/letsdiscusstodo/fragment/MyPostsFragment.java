@@ -201,6 +201,8 @@ public class MyPostsFragment extends Fragment {
 
                         mDatabase.child("posts/" + postkey).removeValue();
                         mDatabase.child("user-posts/" + getUid() + "/" + postkey).removeValue();
+                        mDatabase.child("post-comments/" + postkey).removeValue();
+
 
                         Toast.makeText(getContext(), "Post Deleted", Toast.LENGTH_SHORT).show();
 

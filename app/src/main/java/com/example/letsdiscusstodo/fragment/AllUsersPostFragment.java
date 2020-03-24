@@ -130,11 +130,9 @@ public class AllUsersPostFragment extends Fragment {
                     @Override
                     public void onClick(View v) {
 
-                        Toast.makeText(getContext(), "Hello", Toast.LENGTH_SHORT).show();
+                       // Log.d(TAG, "Abhi Post ref: 130 " + postKey);
 
-                        Log.d(TAG, "Abhi Post ref: 130 " + postKey);
-
-                        Intent intent = new Intent(getActivity(), PostDetailActivity.class);
+                        Intent intent = new Intent(getActivity(), PostCommentActivity.class);
                         intent.putExtra("post_key", postKey);
                         startActivity(intent);
 

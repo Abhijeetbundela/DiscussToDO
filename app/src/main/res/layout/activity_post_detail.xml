@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activities.PostDetailActivity" >
+    tools:context=".activities.PostDetailActivity">
 
     <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/postUserPhoto"
@@ -116,5 +116,30 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/commentForm"
         tools:listitem="@layout/item_comment" />
+
+    <TextView
+        android:id="@+id/comments_loading_textView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center"
+        android:visibility="invisible"
+        android:text="Loading Comments...."
+        android:textColor="@android:color/darker_gray"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toTopOf="@+id/guideline3"
+        app:layout_constraintEnd_toEndOf="@+id/recyclerPostComments"
+        app:layout_constraintStart_toStartOf="@+id/recyclerPostComments"
+        app:layout_constraintTop_toTopOf="@+id/recyclerPostComments" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.7" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

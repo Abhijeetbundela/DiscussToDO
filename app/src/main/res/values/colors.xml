@@ -5,6 +5,7 @@
     <color name="colorAccent">#FFA000</color>
 
     <color name="material_gray_500">#D5F1F1F1</color>
+    <color name="material_gray_600">#C1707070</color>
 
 
 </resources>

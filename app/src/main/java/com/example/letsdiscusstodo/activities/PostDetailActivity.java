@@ -345,15 +345,32 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
             holder.authorView.setText(comment.author);
             holder.bodyView.setText(comment.text);
 
-//            DatabaseReference mCommentsReference = FirebaseDatabase.getInstance().getReference()
-//                    .child("post-comments").child(mPostKey).push();
+
+
+
+            DatabaseReference mCommentsReference = FirebaseDatabase.getInstance().getReference()
+                    .child("post-comments").child(mPostKey);
 
 //            Log.d(TAG,"OnBindViewHolder : " + mCommentsReference);
 
-//            mCommentsReference.addChildEventListener(new ChildEventListener() {
-//                @Override
-//                public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-//
+
+
+
+            mCommentsReference.addChildEventListener(new ChildEventListener() {
+                @Override
+                public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                    final DatabaseReference postRef = dataSnapshot.getRef();
+
+
+                    //Log.d(TAG, "postRef " + postRef);
+
+                    final String postKey = postRef.getKey();
+
+                    Log.d(TAG, "postKey " + postKey);
+
+
+
 //                    final DatabaseReference data = FirebaseDatabase.getInstance().getReference().child("post-comments").child(mPostKey).child(Objects.requireNonNull(dataSnapshot.getKey()));
 //
 //                    data.addValueEventListener(new ValueEventListener() {
@@ -398,31 +415,31 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
 //
 //                        }
 //                    });
-//
-//
-//                }
-//
-//                @Override
-//                public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-//
-//
-//                }
-//
-//                @Override
-//                public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-//
-//                }
-//
-//                @Override
-//                public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-//
-//                }
-//
-//                @Override
-//                public void onCancelled(@NonNull DatabaseError databaseError) {
-//
-//                }
-//            });
+
+
+                }
+
+                @Override
+                public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+
+                }
+
+                @Override
+                public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+                }
+
+                @Override
+                public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
 
 
         }

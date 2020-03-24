@@ -22,7 +22,6 @@ public class AllUserPostViewHolder extends RecyclerView.ViewHolder {
     public TextView bodyView;
     public ProgressBar progressBar;
 
-    public CircleImageView circleImageView;
 
 
     public AllUserPostViewHolder(View itemView) {

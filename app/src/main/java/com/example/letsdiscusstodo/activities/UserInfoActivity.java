@@ -75,9 +75,7 @@ public class UserInfoActivity extends AppCompatActivity {
         setContentView(R.layout.activity_user_info);
 
         getSupportActionBar().setTitle("Profile");
-
-
-
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mUserName = findViewById(R.id.user_name);
         mUserAbout = findViewById(R.id.user_about);
@@ -372,7 +370,10 @@ public class UserInfoActivity extends AppCompatActivity {
 
         if (userDataStatus) {
             alertDialog();
+
         } else {
+
+
 
             Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
