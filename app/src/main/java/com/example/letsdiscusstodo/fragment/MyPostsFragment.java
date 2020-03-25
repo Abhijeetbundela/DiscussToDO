@@ -66,6 +66,7 @@ public class MyPostsFragment extends Fragment {
     private FirebaseAuth mAuth;
 
 
+
     public MyPostsFragment() {
     }
 
@@ -141,7 +142,7 @@ public class MyPostsFragment extends Fragment {
             protected void onBindViewHolder(MyPostViewHolder viewHolder, final int position, final Post model) {
                 final DatabaseReference postRef = getRef(position);
 
-                final String postKey = postRef.getKey();
+                postkey = postRef.getKey();
                 viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -159,7 +160,7 @@ public class MyPostsFragment extends Fragment {
                     @Override
                     public boolean onLongClick(View v) {
 
-                        postkey = getRef(position).getKey();
+                       // postkey = getRef(position).getKey();
 
                         deleteMyPost();
                         return true;
