@@ -15,14 +15,34 @@ public class Post {
     public String title;
     public String date;
     public String body;
+
     public int starCount = 0;
     public Map<String, Boolean> stars = new HashMap<>();
+    public int postlikeCount = 0;
+    public Map<String, Boolean> postlike = new HashMap<>();
+
 
     public Post() {
         // Default constructor
     }
 
-    public Post(String uid, String author, String title, String body, int starCount, Map<String, Boolean> stars, String date) {
+    public int getPostlikeCount() {
+        return postlikeCount;
+    }
+
+    public void setPostlikeCount(int postlikeCount) {
+        this.postlikeCount = postlikeCount;
+    }
+
+    public Map<String, Boolean> getPostlike() {
+        return postlike;
+    }
+
+    public void setPostlike(Map<String, Boolean> postlike) {
+        this.postlike = postlike;
+    }
+
+    public Post(String uid, String author, String title, String body, int starCount, Map<String, Boolean> stars, String date , int postlikeCount, Map<String, Boolean> postlike) {
         this.uid = uid;
         this.author = author;
         this.title = title;
@@ -30,6 +50,9 @@ public class Post {
         this.starCount = starCount;
         this.stars = stars;
         this.date = date;
+        this.postlike = postlike;
+        this.postlikeCount = postlikeCount;
+
     }
 
     public Post(String uid, String author, String title, String body, String date) {
@@ -51,6 +74,8 @@ public class Post {
         result.put("starCount", starCount);
         result.put("stars", stars);
         result.put("date", date);
+        result.put("postlikecout", postlikeCount);
+        result.put("postlike", postlike);
 
         return result;
     }

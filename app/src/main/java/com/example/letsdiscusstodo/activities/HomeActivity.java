@@ -2,11 +2,9 @@ package com.example.letsdiscusstodo.activities;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
@@ -24,6 +22,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
@@ -32,7 +31,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -177,7 +175,7 @@ public class HomeActivity extends AppCompatActivity {
         final TextInputLayout mTitle = myview.findViewById(R.id.title);
         final TextInputLayout mBody = myview.findViewById(R.id.body);
 
-        builder.setCancelable(false).setTitle("Add New Post");
+        builder.setCancelable(false).setTitle("Add Post");
 
         builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
             @Override
@@ -229,17 +227,41 @@ public class HomeActivity extends AppCompatActivity {
 
                                     UserInformation user = dataSnapshot.getValue(UserInformation.class);
 
-                                    SimpleDateFormat sdf = new SimpleDateFormat("dd MMM \n\t\thh:mm a");
-                                    Calendar calendar = Calendar.getInstance();
-                                    String currentDate = sdf.format(calendar.getTime());
-                                    SimpleDateFormat sdf_ = new SimpleDateFormat("EEE");
-                                    Date date = new Date();
-                                    String dayName = sdf_.format(date);
-                                    String mDate = dayName + ", " + currentDate;
+
+                                    SimpleDateFormat sdf1 = new SimpleDateFormat(" dd MMM ");
+                                    SimpleDateFormat sdf2 = new SimpleDateFormat(" hh:mm a");
+                                    Calendar calendar2 = Calendar.getInstance();
+                                    String currentDate2 = sdf2.format(calendar2.getTime());
+                                    Calendar calendar1 = Calendar.getInstance();
+                                    String currentDate1 = sdf1.format(calendar1.getTime());
+                                    SimpleDateFormat sdf_1 = new SimpleDateFormat("EEE");
+                                    Date date1 = new Date();
+                                    String dayName1 = sdf_1.format(date1);
+                                    String mDate1 = dayName1 + "," + currentDate1 + "at" + currentDate2;
+
+                                    Log.d("MYYT", mDate1);
+//                                    SimpleDateFormat sdf = new SimpleDateFormat("dd MMM\n\t\thh:mm a\t");
+//                                    Calendar calendar = Calendar.getInstance();
+//                                    String currentDate = sdf.format(calendar.getTime());
+//                                    SimpleDateFormat sdf_ = new SimpleDateFormat("EEE");
+//                                    Date date = new Date();
+//                                    String dayName = sdf_.format(date);
+//                                    String mDate = dayName + ", " + currentDate;
+
+
+//                                    UserLastSeenTime lastSeenTime = new UserLastSeenTime();
+//                                    long last_seen = System.currentTimeMillis();
+//
+//
+//                                    String lastSeenOnScreenTime = lastSeenTime.getTimeAgo(last_seen, getApplicationContext());
+//                                    Log.e("lastSeenTime", lastSeenOnScreenTime);
 
                                     if (user != null) {
-                                        Toast.makeText(getApplicationContext(), "Posted", Toast.LENGTH_SHORT).show();
-                                        writeNewPost(userId, user.getUserName(), title, note, mDate);
+
+
+                                        writeNewPost(userId, user.getUserName(), title, note, mDate1);
+
+
                                     } else {
 
                                         mProgressDialog.dismiss();
@@ -277,7 +299,6 @@ public class HomeActivity extends AppCompatActivity {
     }
 
 
-
     private void writeNewPost(String userId, String username, String title, String body, String mDate) {
 
         String key = mDatabase.child("posts").push().getKey();
@@ -285,10 +306,13 @@ public class HomeActivity extends AppCompatActivity {
         Map<String, Object> postValues = post.toMap();
 
         Map<String, Object> childUpdates = new HashMap<>();
+
         childUpdates.put("/posts/" + key, postValues);
         childUpdates.put("/user-posts/" + userId + "/" + key, postValues);
 
+
         mDatabase.updateChildren(childUpdates);
+        //mDatabase.child("posts").child(key).child("timeStamp").setValue(ServerValue.TIMESTAMP);
 
         mProgressDialog.dismiss();
     }

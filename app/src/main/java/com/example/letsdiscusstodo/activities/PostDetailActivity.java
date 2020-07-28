@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,7 +27,6 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -57,7 +57,7 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
 
     private CircleImageView mPostUserPhoto;
     private EditText mCommentField;
-    private Button mCommentButton;
+    private ImageButton mCommentButton;
     private RecyclerView mCommentsRecycler;
 
 
@@ -66,7 +66,7 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_post_detail);
+        setContentView(R.layout.activity_post_comment);
 
         getSupportActionBar().setTitle("PostDetails");
 
@@ -91,7 +91,7 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
         mTitleView = findViewById(R.id.postTitle);
         mBodyView = findViewById(R.id.postBody);
         mCommentField = findViewById(R.id.fieldCommentText);
-        mCommentButton = findViewById(R.id.buttonPostComment);
+       // mCommentButton = findViewById(R.id.imageButtonPostComment);
         mCommentsRecycler = findViewById(R.id.recyclerPostComments);
         mPostUserPhoto = findViewById(R.id.postUserPhoto);
 
@@ -190,9 +190,9 @@ public class PostDetailActivity extends AppCompatActivity implements View.OnClic
     @Override
     public void onClick(View v) {
         int i = v.getId();
-        if (i == R.id.buttonPostComment) {
-            postComment();
-        }
+//        if (i == R.id.imageButtonPostComment) {
+//            postComment();
+//        }
     }
 
     private void postComment() {

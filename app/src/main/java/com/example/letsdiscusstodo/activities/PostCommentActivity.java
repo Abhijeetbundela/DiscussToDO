@@ -1,13 +1,19 @@
 package com.example.letsdiscusstodo.activities;
 
 import android.app.ProgressDialog;
+import android.media.AudioAttributes;
+import android.media.AudioManager;
+import android.media.SoundPool;
+import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,6 +32,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,6 +53,9 @@ public class PostCommentActivity extends AppCompatActivity {
 
     private ProgressDialog mProgressDialog;
 
+    private SoundPool soundPool;
+    private int sound;
+
     public static final String EXTRA_POST_KEY = "post_key";
 
     private DatabaseReference mPostReference;
@@ -54,24 +64,27 @@ public class PostCommentActivity extends AppCompatActivity {
     private ValueEventListener mPostListener;
     private String mPostKey, mPostUserUid;
 
-    private TextView mAuthorView, mTitleView, mBodyView, mLoadingTextView;
+    private TextView mAuthorView, mTitleView, mBodyView;
 
     private CircleImageView mPostUserPhoto;
     private EditText mCommentField;
-    private Button mCommentButton;
+    private ImageButton mImageCommentButton;
     private RecyclerView mCommentsRecycler;
+
+    private FirebaseFirestore mFirestore;
 
     private FirebaseRecyclerAdapter<Comment, CommentViewHolder> mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_post_detail);
+        setContentView(R.layout.activity_post_comment);
 
         getSupportActionBar().setTitle("PostComments");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mAuth = FirebaseAuth.getInstance();
+        mFirestore = FirebaseFirestore.getInstance();
         userId = mAuth.getUid();
 
         mPostKey = getIntent().getStringExtra(EXTRA_POST_KEY);
@@ -79,23 +92,39 @@ public class PostCommentActivity extends AppCompatActivity {
             throw new IllegalArgumentException("Must pass EXTRA_POST_KEY");
         }
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+
+            AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build();
+
+            soundPool = new SoundPool.Builder().setMaxStreams(1).setAudioAttributes(audioAttributes).build();
+
+        } else {
+            soundPool = new SoundPool(1, AudioManager.STREAM_MUSIC, 0);
+
+        }
+
+        sound = soundPool.load(getApplicationContext(), R.raw.like_sound, 1);
+
+
         mAuthorView = findViewById(R.id.postAuthor);
         mTitleView = findViewById(R.id.postTitle);
         mBodyView = findViewById(R.id.postBody);
         mCommentField = findViewById(R.id.fieldCommentText);
-        mCommentButton = findViewById(R.id.buttonPostComment);
+        mImageCommentButton = findViewById(R.id.imageCommentBtn);
         mCommentsRecycler = findViewById(R.id.recyclerPostComments);
         mPostUserPhoto = findViewById(R.id.postUserPhoto);
-        mLoadingTextView = findViewById(R.id.comments_loading_textView);
 
         mProgressDialog = new ProgressDialog(this);
         mProgressDialog.setMessage("loading comments....");
         mProgressDialog.setCancelable(false);
+        mProgressDialog.show();
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
-        mCommentsRecycler.setHasFixedSize(true);
         mCommentsRecycler.setLayoutManager(layoutManager);
-
+        mCommentsRecycler.setHasFixedSize(true);
 
         mPostReference = FirebaseDatabase.getInstance().getReference()
                 .child("posts").child(mPostKey);
@@ -109,11 +138,11 @@ public class PostCommentActivity extends AppCompatActivity {
 
                 Post post = dataSnapshot.getValue(Post.class);
 
-            try{
-                mPostUserUid = post.getUid();
-            }catch (Exception e){
-                Log.d(TAG, "Exception : " + e.getLocalizedMessage() );
-            }
+                try {
+                    mPostUserUid = post.getUid();
+                } catch (Exception e) {
+                    Log.d(TAG, "Exception : " + e.getLocalizedMessage());
+                }
 
 
 //                Log.d(TAG, "User Post ref :  " + mPostUserUid);
@@ -153,7 +182,37 @@ public class PostCommentActivity extends AppCompatActivity {
 
         fetch();
 
-        mCommentButton.setOnClickListener(new View.OnClickListener() {
+        mCommentField.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+
+                if (s.toString().isEmpty() && !s.toString().contains("\t")) {
+
+                    mImageCommentButton.setVisibility(View.INVISIBLE);
+
+                } else {
+
+                    mImageCommentButton.setVisibility(View.VISIBLE);
+
+                }
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+
+            }
+        });
+
+        mImageCommentButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
@@ -195,6 +254,7 @@ public class PostCommentActivity extends AppCompatActivity {
 
         mPostListener = postListener;
         mAdapter.startListening();
+        mProgressDialog.dismiss();
 
     }
 
@@ -206,9 +266,8 @@ public class PostCommentActivity extends AppCompatActivity {
             mPostReference.removeEventListener(mPostListener);
         }
 
-        mLoadingTextView.setVisibility(View.INVISIBLE);
-
         mAdapter.stopListening();
+        mProgressDialog.dismiss();
     }
 
     public static class CommentViewHolder extends RecyclerView.ViewHolder {
@@ -228,8 +287,7 @@ public class PostCommentActivity extends AppCompatActivity {
             likeView = itemView.findViewById(R.id.like_text_view);
             replyView = itemView.findViewById(R.id.reply_text_view);
             likeCount = itemView.findViewById(R.id.like_count);
-            v =itemView.findViewById(R.id.like_include);
-
+            v = itemView.findViewById(R.id.like_include);
 
 
         }
@@ -238,9 +296,6 @@ public class PostCommentActivity extends AppCompatActivity {
 
     private void fetch() {
 
-         mLoadingTextView.setVisibility(View.VISIBLE);
-
-        //mProgressDialog.show();
 
         FirebaseRecyclerOptions options = new FirebaseRecyclerOptions.Builder<Comment>().setQuery(mCommentsReference, Comment.class).build();
 
@@ -258,18 +313,21 @@ public class PostCommentActivity extends AppCompatActivity {
             @Override
             protected void onBindViewHolder(@NonNull final CommentViewHolder holder, final int position, @NonNull final Comment model) {
 
+                mProgressDialog.dismiss();
+
+                soundPool.play(0, 0, 0, 0, 0, 0);
+
                 holder.authorView.setText(model.getAuthor());
                 holder.bodyView.setText(model.getText());
-                mLoadingTextView.setVisibility(View.GONE);
                 holder.likeCount.setText(String.valueOf(model.likeCount));
 
 
+                Log.d("MYYT", String.valueOf(getItemCount()));
 
 
-
-                if(model.likeCount == 0){
+                if (model.likeCount == 0) {
                     holder.v.setVisibility(View.INVISIBLE);
-                }else{
+                } else {
                     holder.v.setVisibility(View.VISIBLE);
                 }
 
@@ -279,11 +337,12 @@ public class PostCommentActivity extends AppCompatActivity {
 
 
                 if (model.likes.containsKey(userId)) {
+
                     holder.likeView.setTextColor(getResources().getColor(R.color.colorPrimaryDark));
                 } else {
                     holder.likeView.setTextColor(getResources().getColor(R.color.material_gray_600));
                 }
-                
+
                 holder.replyView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -295,6 +354,8 @@ public class PostCommentActivity extends AppCompatActivity {
                 holder.likeView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+
+                        soundPool.play(sound, 1, 0, 0, 0, 1);
 
                         DatabaseReference likeRef = FirebaseDatabase.getInstance().getReference()
                                 .child("post-comments").child(mPostKey).child(postKey);
@@ -335,7 +396,7 @@ public class PostCommentActivity extends AppCompatActivity {
                 final DatabaseReference data = FirebaseDatabase.getInstance().getReference()
                         .child("post-comments").child(mPostKey).child(postKey);
 
-                 Log.d(TAG,"Data : " + data);
+                Log.d(TAG, "Data : " + data);
 
                 data.addValueEventListener(new ValueEventListener() {
                     @Override
@@ -343,7 +404,7 @@ public class PostCommentActivity extends AppCompatActivity {
 
                         Comment comment = dataSnapshot.getValue(Comment.class);
 
-                      //  Log.d(TAG, "Comment : " + comment.getUid());
+                        //  Log.d(TAG, "Comment : " + comment.getUid());
 
                         try {
                             DatabaseReference userdata = FirebaseDatabase.getInstance().getReference("users/" + comment.getUid());
@@ -368,14 +429,10 @@ public class PostCommentActivity extends AppCompatActivity {
 
                                 }
                             });
-                        }catch (Exception e){
-                            Log.d(TAG,"Exception 1 : " + e.getLocalizedMessage());
+                        } catch (Exception e) {
+                            Log.d(TAG, "Exception 1 : " + e.getLocalizedMessage());
 
                         }
-
-
-
-
 
 
                     }
@@ -417,11 +474,11 @@ public class PostCommentActivity extends AppCompatActivity {
                             String key = mCommentsReference.push().getKey();
                             Comment comment = new Comment(userId, user.getUserName(), commentText);
                             Map<String, Object> commentValues = comment.toMap();
-
                             Map<String, Object> childUpdates = new HashMap<>();
                             childUpdates.put(key, commentValues);
 
                             mCommentsReference.updateChildren(childUpdates);
+                            mCommentsReference.child(key).child("comment_id").setValue(key);
 
 //                            Comment comment = new Comment(userId, user.getUserName(), commentText, null, 0);
 //                            mCommentsReference.push().setValue(comment);

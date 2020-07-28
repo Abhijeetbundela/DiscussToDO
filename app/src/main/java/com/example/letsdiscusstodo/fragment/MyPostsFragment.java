@@ -1,7 +1,7 @@
 package com.example.letsdiscusstodo.fragment;
 
 
-
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -16,6 +17,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.letsdiscusstodo.R;
@@ -23,9 +26,11 @@ import com.example.letsdiscusstodo.activities.EntryChooseActivity;
 import com.example.letsdiscusstodo.activities.UserInfoActivity;
 import com.example.letsdiscusstodo.model.Post;
 import com.example.letsdiscusstodo.model.UserInformation;
+import com.example.letsdiscusstodo.utils.UserLastSeenTime;
 import com.example.letsdiscusstodo.viewholder.MyPostViewHolder;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -41,7 +46,9 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -49,6 +56,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import static com.firebase.ui.auth.AuthUI.getApplicationContext;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -59,19 +68,19 @@ public class MyPostsFragment extends Fragment {
     private DatabaseReference mDatabase;
     private FirebaseRecyclerAdapter<Post, MyPostViewHolder> mAdapter;
     private RecyclerView mRecycler;
-    private LinearLayoutManager mManager;
+    private TextToSpeech tts;
+    private Boolean isSpeechOn;
     private ProgressDialog mProgressDialog;
-    private String postkey, title, body, user;
-
+    private String postkey, title, body;
     private FirebaseAuth mAuth;
-
+    private TextView noPost;
 
 
     public MyPostsFragment() {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
 
         View rootView = inflater.inflate(R.layout.fragment_my_post, container, false);
@@ -82,10 +91,12 @@ public class MyPostsFragment extends Fragment {
 
         mAuth = FirebaseAuth.getInstance();
 
+
         mRecycler = rootView.findViewById(R.id.my_post_recycler_view);
+
         mRecycler.setHasFixedSize(true);
         mProgressDialog = new ProgressDialog(getActivity());
-        mProgressDialog.setMessage("fetching...");
+        mProgressDialog.setMessage("Loading...");
         mProgressDialog.setCancelable(false);
 
         return rootView;
@@ -96,7 +107,7 @@ public class MyPostsFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        if (isNetworkvailable(getActivity())) {
+        if (isNetworkAvailable(getActivity())) {
 
             fetch();
 
@@ -108,10 +119,16 @@ public class MyPostsFragment extends Fragment {
 
     }
 
+
     private void fetch() {
 
-        mManager = new LinearLayoutManager(getActivity());
+
+
+
+
+        LinearLayoutManager mManager = new LinearLayoutManager(getActivity());
         mRecycler.setLayoutManager(mManager);
+        mRecycler.setHasFixedSize(true);
 
         Query postsQuery = mDatabase.child("user-posts").child(getUid());
 
@@ -132,20 +149,27 @@ public class MyPostsFragment extends Fragment {
                 mProgressDialog.dismiss();
             }
 
+            @NonNull
             @Override
-            public MyPostViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+            public MyPostViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
                 LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
                 return new MyPostViewHolder(inflater.inflate(R.layout.item_my_post, viewGroup, false));
             }
 
             @Override
-            protected void onBindViewHolder(MyPostViewHolder viewHolder, final int position, final Post model) {
+            protected void onBindViewHolder(@NonNull MyPostViewHolder viewHolder, final int position, @NonNull final Post model) {
                 final DatabaseReference postRef = getRef(position);
 
-                postkey = postRef.getKey();
+               final String postKey = postRef.getKey();
                 viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+
+//                        final DatabaseReference postRef = getRef(position);
+//
+//                        title = model.getTitle();
+//                        body = model.getBody();
+//                        postkey = postRef.getKey();
 
                         title = model.getTitle();
                         body = model.getBody();
@@ -156,16 +180,16 @@ public class MyPostsFragment extends Fragment {
                     }
                 });
 
-                viewHolder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
-                    @Override
-                    public boolean onLongClick(View v) {
-
-                       // postkey = getRef(position).getKey();
-
-                        deleteMyPost();
-                        return true;
-                    }
-                });
+//                viewHolder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+//                    @Override
+//                    public boolean onLongClick(View v) {
+//
+//                        postkey = getRef(position).getKey();
+//
+//                        deleteMyPost();
+//                        return true;
+//                    }
+//                });
 
                 if (model.stars.containsKey(getUid())) {
                     viewHolder.mMyPoststar.setImageResource(R.drawable.star);
@@ -177,7 +201,7 @@ public class MyPostsFragment extends Fragment {
                     @Override
                     public void onClick(View starView) {
 
-                        DatabaseReference globalPostRef = mDatabase.child("posts").child(postRef.getKey());
+                        DatabaseReference globalPostRef = mDatabase.child("posts").child(Objects.requireNonNull(postRef.getKey()));
                         DatabaseReference userPostRef = mDatabase.child("user-posts").child(model.uid).child(postRef.getKey());
 
                         onStarClicked(globalPostRef);
@@ -191,11 +215,12 @@ public class MyPostsFragment extends Fragment {
 
     }
 
+
     private void deleteMyPost() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        AlertDialog.Builder builder = new AlertDialog.Builder(Objects.requireNonNull(getContext()));
 
         builder.setCancelable(false)
-                .setTitle("Delete my Post").setMessage("Are you sure to Delete this Post?").
+                .setTitle("Delete Post").setMessage("Are you sure to Delete this Post?").
                 setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -204,8 +229,8 @@ public class MyPostsFragment extends Fragment {
                         mDatabase.child("user-posts/" + getUid() + "/" + postkey).removeValue();
                         mDatabase.child("post-comments/" + postkey).removeValue();
 
-
-                        Toast.makeText(getContext(), "Post Deleted", Toast.LENGTH_SHORT).show();
+                        final Snackbar snackbar = Snackbar.make(Objects.requireNonNull(getView()), "Post is Deleted", Snackbar.LENGTH_LONG);
+                        snackbar.show();
 
 
                     }
@@ -213,7 +238,6 @@ public class MyPostsFragment extends Fragment {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
-                dialog.dismiss();
 
             }
         });
@@ -223,17 +247,30 @@ public class MyPostsFragment extends Fragment {
 
     }
 
+
+
+
+
+
+
     private void updateMyPost() {
 
         LayoutInflater layoutInflater = LayoutInflater.from(getContext());
-        View myView = layoutInflater.inflate(R.layout.new_post_input_layout, null);
+        @SuppressLint("InflateParams") View myView = layoutInflater.inflate(R.layout.new_post_input_layout, null);
 
-        final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        final AlertDialog.Builder builder = new AlertDialog.Builder(Objects.requireNonNull(getContext()));
 
         builder.setView(myView);
 
         final TextInputLayout mTitle = myView.findViewById(R.id.title);
         final TextInputLayout mBody = myView.findViewById(R.id.body);
+
+        final ImageView titleMic = myView.findViewById(R.id.title_mic);
+        final ImageView bodyMic = myView.findViewById(R.id.body_mic);
+//
+//        titleMic.setVisibility(View.VISIBLE);
+//        bodyMic.setVisibility(View.VISIBLE);
+
 
         mTitle.getEditText().setText(title);
         mTitle.getEditText().setSelection(title.length());
@@ -241,13 +278,19 @@ public class MyPostsFragment extends Fragment {
         mBody.getEditText().setText(body);
         mBody.getEditText().setSelection(body.length());
 
+
         builder.setCancelable(false)
-                .setTitle("My Post").setPositiveButton("Update", new DialogInterface.OnClickListener() {
+                .setTitle("Update Post").setPositiveButton("Update", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
             }
         }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        }).setNeutralButton("Delete", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
@@ -289,21 +332,28 @@ public class MyPostsFragment extends Fragment {
                     mDatabase.child("users").child(getUid()).addListenerForSingleValueEvent(
                             new ValueEventListener() {
                                 @Override
-                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
                                     UserInformation user = dataSnapshot.getValue(UserInformation.class);
 
-                                    SimpleDateFormat sdf = new SimpleDateFormat("dd MMM \n\t\thh:mm a");
-                                    Calendar calendar = Calendar.getInstance();
-                                    String currentDate = sdf.format(calendar.getTime());
-                                    SimpleDateFormat sdf_ = new SimpleDateFormat("EEE");
-                                    Date date = new Date();
-                                    String dayName = sdf_.format(date);
-                                    String mDate = dayName + ", " + currentDate;
+                                    SimpleDateFormat sdf1 = new SimpleDateFormat(" dd MMM ");
+                                    SimpleDateFormat sdf2 = new SimpleDateFormat(" hh:mm a");
+                                    Calendar calendar2 = Calendar.getInstance();
+                                    String currentDate2 = sdf2.format(calendar2.getTime());
+                                    Calendar calendar1 = Calendar.getInstance();
+                                    String currentDate1 = sdf1.format(calendar1.getTime());
+                                    SimpleDateFormat sdf_1 = new SimpleDateFormat("EEE");
+                                    Date date1 = new Date();
+                                    String dayName1 = sdf_1.format(date1);
+                                    String mDate1 = dayName1 + "," + currentDate1 + "at" + currentDate2;
+
 
                                     if (user != null) {
-                                        updatePost(getUid(), user.getUserName(), title, note, mDate, postkey);
-                                        Toast.makeText(getContext(), "Post Updated", Toast.LENGTH_SHORT).show();
+                                        updatePost(getUid(), user.getUserName(), title, note, mDate1, postkey);
+
+                                        final Snackbar snackbar = Snackbar.make(Objects.requireNonNull(getView()), "Post is Updated", Snackbar.LENGTH_LONG);
+                                        snackbar.show();
+
                                     } else {
 
                                         mProgressDialog.dismiss();
@@ -317,7 +367,7 @@ public class MyPostsFragment extends Fragment {
                                 }
 
                                 @Override
-                                public void onCancelled(DatabaseError databaseError) {
+                                public void onCancelled(@NonNull DatabaseError databaseError) {
                                     Toast.makeText(getContext(), databaseError.getMessage(), Toast.LENGTH_SHORT).show();
 
                                 }
@@ -336,6 +386,25 @@ public class MyPostsFragment extends Fragment {
             }
         });
 
+        alertDialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                deleteMyPost();
+                alertDialog.dismiss();
+            }
+        });
+
+    }
+
+    @Override
+    public void onDestroy() {
+        if (tts != null) {
+            tts.stop();
+            tts.shutdown();
+        }
+        super.onDestroy();
+
+
     }
 
     private void updatePost(String userId, String username, String title, String body, String mDate, String postkey) {
@@ -353,10 +422,11 @@ public class MyPostsFragment extends Fragment {
         mProgressDialog.dismiss();
     }
 
-    public static boolean isNetworkvailable(Context con) {
+    private static boolean isNetworkAvailable(Context con) {
         try {
 
             ConnectivityManager cm = (ConnectivityManager) con.getSystemService(Context.CONNECTIVITY_SERVICE);
+            assert cm != null;
             NetworkInfo networkInfo = cm.getActiveNetworkInfo();
             if (networkInfo != null && networkInfo.isConnected()) {
                 return true;
@@ -369,13 +439,14 @@ public class MyPostsFragment extends Fragment {
 
 
     public String getUid() {
-        return mAuth.getCurrentUser().getUid();
+        return Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
     }
 
     private void onStarClicked(DatabaseReference postRef) {
         postRef.runTransaction(new Transaction.Handler() {
+            @NonNull
             @Override
-            public Transaction.Result doTransaction(MutableData mutableData) {
+            public Transaction.Result doTransaction(@NonNull MutableData mutableData) {
                 Post p = mutableData.getValue(Post.class);
                 if (p == null) {
                     return Transaction.success(mutableData);
@@ -421,7 +492,7 @@ public class MyPostsFragment extends Fragment {
 
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        inflater.inflate(R.menu.my_post_menu,menu);
+        inflater.inflate(R.menu.my_post_menu, menu);
 
         super.onCreateOptionsMenu(menu, inflater);
     }
@@ -444,7 +515,7 @@ public class MyPostsFragment extends Fragment {
 
             case R.id.app_info: {
 
-              appInfo();
+                appInfo();
                 return true;
             }
 
@@ -456,8 +527,8 @@ public class MyPostsFragment extends Fragment {
 
     private void appInfo() {
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle("Post Info").setMessage("\n1. Tap post to Update Post. \n\n\n2. Hold post to Delete Post\n").setCancelable(false).
+        AlertDialog.Builder builder = new AlertDialog.Builder(Objects.requireNonNull(getContext()));
+        builder.setTitle("Post Info").setMessage("\n1. Tap post to Update and Delete.").setCancelable(false).
                 setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -469,4 +540,5 @@ public class MyPostsFragment extends Fragment {
         alertDialog.show();
 
     }
+
 }

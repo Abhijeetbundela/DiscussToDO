@@ -13,13 +13,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.example.letsdiscusstodo.R;
 import com.example.letsdiscusstodo.activities.EntryChooseActivity;
 import com.example.letsdiscusstodo.activities.PostCommentActivity;
-import com.example.letsdiscusstodo.activities.PostDetailActivity;
 import com.example.letsdiscusstodo.activities.UserInfoActivity;
 import com.example.letsdiscusstodo.model.Post;
 import com.example.letsdiscusstodo.model.UserInformation;
@@ -33,8 +31,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Query;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.Objects;
 
@@ -54,6 +54,9 @@ public class AllUsersPostFragment extends Fragment {
 
     private FirebaseAuth mAuth;
 
+    private FirebaseFirestore mFirestore;
+
+
     private FirebaseRecyclerAdapter<Post, AllUserPostViewHolder> mAdapter;
     private RecyclerView mRecycler;
     private LinearLayoutManager mManager;
@@ -72,6 +75,7 @@ public class AllUsersPostFragment extends Fragment {
         setHasOptionsMenu(true);
 
         mAuth = FirebaseAuth.getInstance();
+        mFirestore = FirebaseFirestore.getInstance();
 
         mRecycler = rootView.findViewById(R.id.all_user_post_recycler_view);
         mRecycler.setHasFixedSize(true);
@@ -99,6 +103,7 @@ public class AllUsersPostFragment extends Fragment {
 
         mManager = new LinearLayoutManager(getActivity());
         mRecycler.setLayoutManager(mManager);
+        mRecycler.setHasFixedSize(true);
 
         Query postsQuery = mDatabase.child("posts").limitToFirst(100);
 
@@ -126,11 +131,9 @@ public class AllUsersPostFragment extends Fragment {
 
                 final String postKey = postRef.getKey();
 
-                viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+                viewHolder.postCommentLayout.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-
-                       // Log.d(TAG, "Abhi Post ref: 130 " + postKey);
 
                         Intent intent = new Intent(getActivity(), PostCommentActivity.class);
                         intent.putExtra("post_key", postKey);
@@ -146,12 +149,108 @@ public class AllUsersPostFragment extends Fragment {
                 }
 
 
+                if (model.postlike.containsKey(getUid())) {
+
+                    viewHolder.likeImage.setImageResource(R.drawable.thumb_up_blue);
+                } else {
+                    viewHolder.likeImage.setImageResource(R.drawable.thumb_up_like);
+                }
+
+                viewHolder.likeImage.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        //     DatabaseReference likeref = mDatabase.child("user-posts").child(getUid()).child(postRef.getKey());
+                        DatabaseReference globalPostRef = mDatabase.child("posts").child(Objects.requireNonNull(postRef.getKey()));
+
+//                        likeref.runTransaction(new Transaction.Handler() {
+//                            @NonNull
+//                            @Override
+//                            public Transaction.Result doTransaction(@NonNull MutableData mutableData) {
+//                                Post p = mutableData.getValue(Post.class);
+//                                if (p == null) {
+//                                    return Transaction.success(mutableData);
+//                                }
+//
+//                                if (p.postlike.containsKey(getUid())) {
+//                                    p.postlikeCount = p.postlikeCount - 1;
+//                                    p.postlike.remove(getUid());
+//                                } else {
+//                                    p.postlikeCount = p.postlikeCount + 1;
+//                                    p.postlike.put(getUid(), true);
+//                                }
+//
+//                                mutableData.setValue(p);
+//                                return Transaction.success(mutableData);
+//                            }
+//
+//                            @Override
+//                            public void onComplete(DatabaseError databaseError, boolean b,
+//                                                   DataSnapshot dataSnapshot) {
+//                                Log.d(TAG, "postTransaction:onComplete:" + databaseError);
+//                            }
+//                        });
+                        globalPostRef.runTransaction(new Transaction.Handler() {
+                            @NonNull
+                            @Override
+                            public Transaction.Result doTransaction(@NonNull MutableData mutableData) {
+                                Post p = mutableData.getValue(Post.class);
+                                if (p == null) {
+                                    return Transaction.success(mutableData);
+                                }
+
+                                if (p.postlike.containsKey(getUid())) {
+                                    p.postlikeCount = p.postlikeCount - 1;
+                                    p.postlike.remove(getUid());
+                                } else {
+                                    p.postlikeCount = p.postlikeCount + 1;
+                                    p.postlike.put(getUid(), true);
+                                }
+
+                                mutableData.setValue(p);
+                                return Transaction.success(mutableData);
+                            }
+
+                            @Override
+                            public void onComplete(DatabaseError databaseError, boolean b,
+                                                   DataSnapshot dataSnapshot) {
+                                Log.d(TAG, "postTransaction:onComplete:" + databaseError);
+                            }
+                        });
+                    }
+                });
+
+
+//
+//                mDatabase.child("posts").child(postKey).addValueEventListener(new ValueEventListener() {
+//                    @Override
+//                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//
+//                        final String timeStamp = dataSnapshot.child("timeStamp").getValue().toString();
+//
+//
+//                      //  viewHolder.allUserPostdateView.setText(getTimeAgo(Long.parseLong(timeStamp)));
+//
+//
+//                    }
+//
+//                    @Override
+//                    public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//                    }
+//                });
+
                 mDatabase.child("users/" + model.getUid()).addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
                         UserInformation userInformation = dataSnapshot.getValue(UserInformation.class);
+
+
+                        viewHolder.userView.setText(userInformation.getUserName());
+
+
                         Log.d(TAG, "onDataChange: " + userInformation.getProfileUri());
+
                         if (userInformation.getProfileUri().equals("default")) {
                             Glide.with(requireContext()).load(R.drawable.user).into(viewHolder.authorpic);
                         } else {
@@ -251,7 +350,7 @@ public class AllUsersPostFragment extends Fragment {
 
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_main,menu);
+        inflater.inflate(R.menu.menu_main, menu);
 
         super.onCreateOptionsMenu(menu, inflater);
     }
@@ -263,7 +362,10 @@ public class AllUsersPostFragment extends Fragment {
 
                 startActivity(new Intent(getContext(), EntryChooseActivity.class));
                 mAuth.signOut();
+
                 return true;
+
+
             }
 
             case R.id.user_info: {
@@ -275,6 +377,60 @@ public class AllUsersPostFragment extends Fragment {
             default:
                 return super.onOptionsItemSelected(item);
 
+        }
+    }
+
+    private String getTimeAgo(long time)
+    {
+        final long diff = System.currentTimeMillis() - time;
+
+        if(diff < 1)
+        {
+            return " just now";
+        }
+        if(diff < 60 * 1000)
+        {
+            if(diff / 1000 < 2)
+            {
+                return diff / 1000 + " second ago";
+            }
+            else
+            {
+                return diff / 1000 + " seconds ago";
+            }
+        }
+        else if(diff < 60 * (60 * 1000))
+        {
+            if(diff / (60 * 1000) < 2)
+            {
+                return diff / (60 * 1000) + " minute ago";
+            }
+            else
+            {
+                return diff / (60 * 1000) + " minutes ago";
+            }
+        }
+        else if(diff < 24 * (60 * (60 * 1000)))
+        {
+            if(diff / (60 * (60 * 1000)) < 2)
+            {
+                return diff / (60 * (60 * 1000)) + " hour ago";
+            }
+            else
+            {
+                return diff / (60 * (60 * 1000)) + " hours ago";
+            }
+        }
+        else
+        {
+            if(diff / (24 * (60 * (60 * 1000))) < 2)
+            {
+                return diff / (24 * (60 * (60 * 1000))) + " day ago";
+            }
+            else
+            {
+                return diff / (24 * (60 * (60 * 1000))) + " days ago";
+            }
         }
     }
 }

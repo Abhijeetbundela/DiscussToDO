@@ -3,6 +3,7 @@ package com.example.letsdiscusstodo.activities;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -19,6 +20,8 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -48,6 +51,17 @@ public class EntryChooseActivity extends AppCompatActivity implements View.OnCli
         mProgressDialog.setTitle("Verifying Credentials.....");
 
         mAuth = FirebaseAuth.getInstance();
+
+        FirebaseMessaging.getInstance().subscribeToTopic("notification").addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+
+                String msg = getString(R.string.msg_subscribe);
+                Log.d("Subscribe",msg);
+
+
+            }
+        });
 
 
         if (mAuth.getCurrentUser() != null) {

@@ -22,15 +22,21 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -50,23 +56,21 @@ public class UserInfoActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
 
+    private FirebaseFirestore mFirestore;
+
     private DatabaseReference mDatabase;
 
     private String userId;
-
-    private FirebaseFirestore database;
 
     private Uri uri = null;
 
     private String profileUri = "default", thumbUri = "default";
 
-    private byte[] thumbByte;
-
     private int galleryRequest = 1;
 
     private MyProgressDialog mMyProgressDialog;
 
-    private boolean userDataStatus ;
+    private boolean userDataStatus;
 
 
     @Override
@@ -84,20 +88,24 @@ public class UserInfoActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
+        mFirestore = FirebaseFirestore.getInstance();
 
         userId = mAuth.getUid();
 
-        database = FirebaseFirestore.getInstance();
+        FirebaseUser user = mAuth.getCurrentUser();
 
+        mUserName.getEditText().setText(user.getDisplayName());
 
-        mStorageRef = FirebaseStorage.getInstance().getReference("images/profileImages/");
-        // mDatabaseReference = FirebaseDatabase.getInstance().getReference("uploads");
+        // Glide.with(getApplicationContext()).load(user.getPhotoUrl()).into(mUserPic);
+
+        mStorageRef = FirebaseStorage.getInstance().getReference("profile_images/");
+
 
         mMyProgressDialog = new MyProgressDialog(this);
 
         mDatabase.child("users/" + userId).addValueEventListener(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+            public void onDataChange(@NonNull final DataSnapshot dataSnapshot) {
 
 
                 if (dataSnapshot.exists()) {
@@ -108,7 +116,9 @@ public class UserInfoActivity extends AppCompatActivity {
                     Log.d("Abhijeet", "onDataChange: " + userInformation.getProfileUri());
 
                     mUserName.getEditText().setText(userInformation.getUserName());
+
                     mUserAbout.getEditText().setText(userInformation.getAbout());
+
 
                     if (userInformation.getProfileUri().equals("default")) {
                         mUserPic.setImageResource(R.drawable.user);
@@ -116,7 +126,7 @@ public class UserInfoActivity extends AppCompatActivity {
                         Glide.with(getApplicationContext()).load(userInformation.getProfileUri()).into(mUserPic);
                     }
 
-                }else {
+                } else {
                     userDataStatus = true;
                 }
 
@@ -128,7 +138,6 @@ public class UserInfoActivity extends AppCompatActivity {
 
             }
         });
-
 
 
         mMyProgressDialog.setTitle("Uploading.....");
@@ -172,48 +181,6 @@ public class UserInfoActivity extends AppCompatActivity {
         return mime.getExtensionFromMimeType(cR.getType(uri));
     }
 
-//    private void uploadFile() {
-//
-//        final String userName = mUserName.getEditText().getText().toString().trim();
-//
-//        final String userAbout = mUserAbout.getEditText().getText().toString().trim();
-//
-//        if(uri != null){
-//            final StorageReference fileReference = mStorageRef.child(System.currentTimeMillis() + "." + getFileExtension(uri));
-//
-//            fileReference.putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-//                @Override
-//                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-//
-//                    String userEmail = mAuth.getCurrentUser().getEmail();
-//
-//                    UserInformation userInformation = new UserInformation(userId,userName,userAbout,taskSnapshot.getUploadSessionUri().toString(),userEmail);
-//                    String uploadId = mDatabaseReference.push().getKey();
-//                    mDatabaseReference.child(uploadId).setValue(userInformation);
-//                    mMyProgressDialog.dismiss();
-//                    Toast.makeText(getApplicationContext(), "Uploaded", Toast.LENGTH_SHORT).show();
-//
-//
-//                }
-//            }).addOnFailureListener(new OnFailureListener() {
-//                @Override
-//                public void onFailure(@NonNull Exception e) {
-//                    Toast.makeText(getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
-//                }
-//            }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-//                @Override
-//                public void onProgress(@NonNull UploadTask.TaskSnapshot taskSnapshot) {
-//
-//                }
-//            });
-//
-//        }else{
-//
-//
-//        }
-//
-//    }
-
     private void uploadImages() {
 
         mUserProfileBtn.setEnabled(false);
@@ -227,7 +194,7 @@ public class UserInfoActivity extends AppCompatActivity {
 
 
             final StorageReference picRef = mStorageRef.child(System.currentTimeMillis() + "." + getFileExtension(uri));
-            //final StorageReference thumbRef = mStorageRef.child("images/profileImages/thumbs/$userId.jpg");
+
 
             picRef.putFile(uri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
                 @Override
@@ -262,24 +229,41 @@ public class UserInfoActivity extends AppCompatActivity {
 
     private void upLoadUserData() {
 
-        mUserProfileBtn.setText("Uploading Data...");
+        mUserProfileBtn.setText("Few more sec...");
 
         String userName = mUserName.getEditText().getText().toString().trim();
 
         String userAbout = mUserAbout.getEditText().getText().toString().trim();
 
-        if (userAbout == "") {
+        if (userAbout.isEmpty()) {
             userAbout = ".";
         }
 
         String userEmail = mAuth.getCurrentUser().getEmail();
 
-        UserInformation userInformationData = new UserInformation(userId, userName, userAbout, profileUri, userEmail);
 
-        mDatabase.child("users").child(userId).setValue(userInformationData);
+        FirebaseInstanceId.getInstance().getInstanceId().addOnSuccessListener(new OnSuccessListener<InstanceIdResult>() {
+            @Override
+            public void onSuccess(InstanceIdResult instanceIdResult) {
 
-        database.collection("users_information_data").
-                document(userId).set(userInformationData).addOnSuccessListener(new OnSuccessListener<Void>() {
+
+                mDatabase.child("users").child(userId).child("device_token").setValue(instanceIdResult.getToken());
+
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+
+                Toast.makeText(getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+
+            }
+        });
+
+        UserInformation userInformation = new UserInformation(userId, userName, userAbout, profileUri, userEmail);
+
+
+        mDatabase.child("users").child(userId).setValue(userInformation).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
 
@@ -296,12 +280,11 @@ public class UserInfoActivity extends AppCompatActivity {
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-
                 mMyProgressDialog.dismiss();
                 Toast.makeText(getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
-
             }
         });
+
 
     }
 
@@ -372,7 +355,6 @@ public class UserInfoActivity extends AppCompatActivity {
             alertDialog();
 
         } else {
-
 
 
             Intent intent = new Intent(getApplicationContext(), HomeActivity.class);

@@ -1,18 +1,45 @@
 package com.example.letsdiscusstodo.model;
 
-import android.net.Uri;
+import java.util.ArrayList;
 
 public class UserInformation {
 
-    private String userId;
+    private String userId,verified;
     private String userName;
     private String about;
     private String profileUri;
     private String userEmail;
+    private String user_thumb_image;
+    private String registrationToken;
 
-    public UserInformation(){}
+    public UserInformation() {
+    }
 
 
+
+    public String getVerified() {
+        return verified;
+    }
+
+    public void setVerified(String verified) {
+        this.verified = verified;
+    }
+
+    public String getUser_thumb_image() {
+        return user_thumb_image;
+    }
+
+    public void setUser_thumb_image(String user_thumb_image) {
+        this.user_thumb_image = user_thumb_image;
+    }
+
+    public String getRegistrationToken() {
+        return registrationToken;
+    }
+
+    public void setRegistrationToken(String registrationToken) {
+        this.registrationToken = registrationToken;
+    }
 
     public UserInformation(String userId, String userName, String about, String profileUri, String userEmail) {
         this.userId = userId;
@@ -20,6 +47,7 @@ public class UserInformation {
         this.about = about;
         this.profileUri = profileUri;
         this.userEmail = userEmail;
+
     }
 
 

@@ -76,6 +76,7 @@ public class MyTopPostsFragment extends Fragment {
 
         mManager = new LinearLayoutManager(getActivity());
         mRecycler.setLayoutManager(mManager);
+        mRecycler.setHasFixedSize(true);
 
         String myUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         Query postsQuery = mDatabase.child("user-posts").child(myUserId).orderByChild("starCount");
