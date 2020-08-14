@@ -63,7 +63,6 @@ public class NewPostActivity extends AppCompatActivity {
             return;
         }
 
-
         if (body.isEmpty()) {
             mBodyField.setError("Enter Dis");
             return;
